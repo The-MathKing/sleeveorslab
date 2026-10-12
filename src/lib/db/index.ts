@@ -13,10 +13,18 @@ export { normalizeEmail, normalizePredictionId } from "./normalize";
 
 let adapter: StorageAdapter | null = null;
 
+function databaseUrl(): string | undefined {
+  // Vercel's Neon integration sets DATABASE_URL; older Vercel Postgres projects set POSTGRES_URL.
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
+}
+
+export function storageKind(): "postgres" | "file" {
+  return databaseUrl() ? "postgres" : "file";
+}
+
 export function getStorage(): StorageAdapter {
   if (adapter) return adapter;
-  // Vercel's Neon integration sets DATABASE_URL; older Vercel Postgres projects set POSTGRES_URL.
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  const url = databaseUrl();
   adapter = url
     ? createPostgresAdapter(url)
     : createFileAdapter(process.env.DATA_DIR || path.join(process.cwd(), ".data"));
