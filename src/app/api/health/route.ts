@@ -25,6 +25,11 @@ export async function GET() {
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? null,
     priceSource: process.env.PRICECHARTING_API_KEY ? "pricecharting" : "tcgplayer-via-pokemontcg",
     commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+    vercelEnv: process.env.VERCEL_ENV ?? null,
+    // Names only (never values) of config-related variables, to debug integration prefixes.
+    configVarNames: Object.keys(process.env)
+      .filter((k) => /DATABASE|POSTGRES|^PG|NEON|ADMIN|STRIPE|SITE_URL|POKEMONTCG|PRICECHARTING/i.test(k))
+      .sort(),
     ...(detail ? { detail } : {}),
   };
   return NextResponse.json(body, { status: db === "ok" ? 200 : 503, headers: { "cache-control": "no-store" } });
