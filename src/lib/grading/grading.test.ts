@@ -20,14 +20,14 @@ describe("fees", () => {
     expect(getTier("cgc-bulk")).toMatchObject({ feeUsd: 17, minCards: 25 });
     expect(getTiers("PSA").filter((t) => t.id.startsWith("psa-value")).every((t) => !t.available)).toBe(true);
   });
-  it("every tier is well-formed and unverified numbers are flagged", () => {
+  it("every tier is well-formed and carries a source or an unverified flag", () => {
     const ids = new Set<string>();
     for (const t of getTiers()) {
       expect(ids.has(t.id)).toBe(false);
       ids.add(t.id);
       expect(t.feeUsd).toBeGreaterThan(0);
       expect(t.turnaroundBusinessDays[0]).toBeLessThanOrEqual(t.turnaroundBusinessDays[1]);
-      expect(t.notes ?? "").toMatch(/Verify on grader site|paused/i);
+      expect(t.notes ?? "").toMatch(/Verify on grader site|paused|checked \d{4}-\d{2}-\d{2}/i);
     }
   });
   it("getTiers filters by grader and returns copies", () => {
@@ -40,8 +40,11 @@ describe("fees", () => {
     expect(defaultTierFor("PSA", 100).id).toBe("psa-standard");
     expect(defaultTierFor("PSA", 1200).id).toBe("psa-regular");
     expect(defaultTierFor("PSA", 4000).id).toBe("psa-super-express");
-    expect(defaultTierFor("PSA", 1e6).id).toBe("psa-super-express");
-    expect(defaultTierFor("CGC", 100).id).toBe("cgc-standard");
+    expect(defaultTierFor("PSA", 20000).id).toBe("psa-premium-1");
+    // Above every flat-fee cap: falls back to the highest-cap tier.
+    expect(defaultTierFor("PSA", 1e6).id).toBe("psa-premium-5");
+    expect(defaultTierFor("CGC", 100).id).toBe("cgc-economy");
+    expect(defaultTierFor("CGC", 2000).id).toBe("cgc-standard");
   });
 });
 
