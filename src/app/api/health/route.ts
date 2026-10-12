@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { storageKind, waitlistCount } from "@/lib/db";
+import { databaseUrlSource, storageKind, waitlistCount } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,6 +19,7 @@ export async function GET() {
   const body = {
     ok: db === "ok" && storage === "postgres",
     storage,
+    databaseVar: databaseUrlSource(),
     db,
     dbLatencyMs: Date.now() - started,
     adminConfigured: Boolean(process.env.ADMIN_TOKEN),
@@ -31,7 +32,8 @@ export async function GET() {
     productionHost: process.env.VERCEL_PROJECT_PRODUCTION_URL ?? null,
     // Names only (never values) of config-related variables, to debug integration prefixes.
     configVarNames: Object.keys(process.env)
-      .filter((k) => /DATABASE|POSTGRES|^PG|NEON|ADMIN|STRIPE|SITE_URL|POKEMONTCG|PRICECHARTING/i.test(k))
+      .filter((k) => /DATABASE|POSTGRES|PG|NEON|STORAGE|ADMIN|STRIPE|BILLING|RESEND|SITE_URL|POKEMONTCG|PRICECHARTING|_URL$|TOKEN|SECRET|_KEY$/i.test(k))
+      .filter((k) => !/^(VERCEL|NEXT_RUNTIME|NODE|npm_|TURBO|__)/.test(k))
       .sort(),
     ...(detail ? { detail } : {}),
   };

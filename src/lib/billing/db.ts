@@ -1,13 +1,14 @@
-// Picks the billing store from env: Postgres when DATABASE_URL/POSTGRES_URL is set (its own
+// Picks the billing store from env: Postgres when a database URL is set (see lib/db/url.ts) (its own
 // small pool, separate from src/lib/db), else ./.data/billing.json for local dev.
 import path from "node:path";
 import postgres from "postgres";
+import { resolveDatabaseUrl } from "@/lib/db/url";
 import { createFileBillingStore, createSqlBillingStore, type BillingSqlClient, type BillingStore } from "./store";
 
 let store: BillingStore | null = null;
 
 function databaseUrl(): string | undefined {
-  return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
+  return resolveDatabaseUrl();
 }
 
 export function createPostgresBillingStore(databaseUrl: string): BillingStore {

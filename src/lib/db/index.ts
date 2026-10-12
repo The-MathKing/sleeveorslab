@@ -1,4 +1,5 @@
-// Server-side storage. Postgres when DATABASE_URL is set (required on serverless hosts
+// Server-side storage. Postgres when a database URL is set (DATABASE_URL, or a Vercel-prefixed
+// variant like STORAGE_URL; see ./url.ts) (required on serverless hosts
 // like Vercel, whose filesystem is read-only); file-backed JSON in ./.data (or $DATA_DIR) otherwise.
 import path from "node:path";
 import type { AnalyticsStats } from "@/lib/analytics/types";
@@ -6,17 +7,18 @@ import type { Prediction, WaitlistSignup } from "@/lib/types";
 import type { RecordEventInput, StorageAdapter } from "./adapter";
 import { createFileAdapter } from "./file";
 import { createPostgresAdapter } from "./postgres";
+import { resolveDatabaseUrl } from "./url";
 
 export type { RecordEventInput, StorageAdapter } from "./adapter";
 export { createFileAdapter } from "./file";
 export { createSqlAdapter, type SqlClient } from "./postgres";
+export { databaseUrlSource, resolveDatabaseUrl } from "./url";
 export { normalizeEmail, normalizePredictionId } from "./normalize";
 
 let adapter: StorageAdapter | null = null;
 
 function databaseUrl(): string | undefined {
-  // Vercel's Neon integration sets DATABASE_URL; older Vercel Postgres projects set POSTGRES_URL.
-  return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
+  return resolveDatabaseUrl();
 }
 
 export function storageKind(): "postgres" | "file" {
