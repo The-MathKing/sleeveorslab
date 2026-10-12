@@ -4,6 +4,8 @@ import { SiteFooter } from "@/components/ui/SiteFooter";
 import { SiteHeader } from "@/components/ui/SiteHeader";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ServiceWorkerRegister } from "@/components/brand/ServiceWorkerRegister";
+import { Analytics } from "@/lib/analytics/Analytics";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const display = Barlow_Condensed({
@@ -27,7 +29,7 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = SITE_URL;
 const description =
   "Should you grade that Pokémon card? Check centering on your phone, see the fees, and get an honest expected-value verdict. Most cards should stay sleeved.";
 
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <SiteFooter />
         </ToastProvider>
         <ServiceWorkerRegister />
+        <Analytics />
       </body>
     </html>
   );

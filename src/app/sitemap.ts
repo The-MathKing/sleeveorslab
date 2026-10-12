@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.sleeveorslab.com").replace(/\/+$/, "");
+import { SITE_URL } from "@/lib/site";
 
 type Entry = { path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number };
 

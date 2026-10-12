@@ -2,6 +2,7 @@
 import clsx from "clsx";
 import { Check, Mail, X } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
+import { sourceToken, track } from "@/lib/analytics/client";
 import { markWaitlistDismissed, markWaitlistJoined } from "@/lib/store";
 import { joinWaitlist } from "./format";
 import { Btn, TextInput } from "./parts";
@@ -41,6 +42,7 @@ export function EmailCapture({
     try {
       const r = await joinWaitlist(email.trim(), source, consent);
       markWaitlistJoined();
+      if (!r.duplicate) track("waitlist_signup", { source: sourceToken(source) });
       setState("done");
       setMsg(r.duplicate ? "You were already on the list. We'll be in touch." : `You're in. ${r.count ? `#${r.count} on the list.` : ""}`);
       onDone?.();

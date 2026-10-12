@@ -2,6 +2,7 @@
 import clsx from "clsx";
 import { ClipboardList, Download, Layers, Plus, RefreshCw, Share2, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@/lib/analytics/client";
 import { evaluateAllGraders } from "@/lib/ev";
 import { getTiers } from "@/lib/grading";
 import { loadBinder, newId, saveBinder, type BinderEntry } from "@/lib/store";
@@ -230,12 +231,21 @@ export function Binder() {
   };
 
   const share = async () => {
+    track("share_clicked");
     const url = shareUrl({ saved: totals.wasted, cards: totals.sleeveCount });
     const how = await shareImage(url, `${totals.sleeveCount} cards sleeved, ${usd(totals.wasted)} in grading fees not wasted. sleeveorslab.com`);
     if (how === "opened") setFlash("Opened the share image in a new tab.");
   };
 
   const evaluated = rows.length - totals.pending;
+
+  // Count a binder evaluation once all prices are in, and again only if the card count changes.
+  const reportedCards = useRef(0);
+  useEffect(() => {
+    if (totals.pending || !evaluated || evaluated === reportedCards.current) return;
+    reportedCards.current = evaluated;
+    track("binder_evaluated", { cards: evaluated });
+  }, [evaluated, totals.pending]);
 
   return (
     <div className="flex flex-col gap-5">

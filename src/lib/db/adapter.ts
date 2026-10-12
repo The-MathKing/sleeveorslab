@@ -1,4 +1,7 @@
+import type { AnalyticsEvent, AnalyticsStats } from "@/lib/analytics/types";
 import type { Prediction, WaitlistSignup } from "@/lib/types";
+
+export type RecordEventInput = Omit<AnalyticsEvent, "at"> & { at?: string };
 
 export interface StorageAdapter {
   addWaitlist(s: WaitlistSignup): Promise<{ ok: boolean; duplicate: boolean }>;
@@ -10,4 +13,13 @@ export interface StorageAdapter {
   /** Privacy deletion requests. Return true when something was removed. */
   deleteWaitlist(email: string): Promise<boolean>;
   deletePrediction(id: string): Promise<boolean>;
+  /** Admin export. Newest first. */
+  listWaitlist(opts?: { consentOnly?: boolean }): Promise<WaitlistSignup[]>;
+
+  /** Anonymous, cookieless event counting. Opportunistically purges expired events (~1% of calls). */
+  recordEvent(e: RecordEventInput): Promise<void>;
+  /** Delete events older than `before`. Returns how many were removed. */
+  purgeEvents(before: Date): Promise<number>;
+  /** Aggregates over the last `days` UTC days (today included). */
+  getStats(opts?: { days?: number }): Promise<AnalyticsStats>;
 }

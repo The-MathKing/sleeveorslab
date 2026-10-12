@@ -1,6 +1,9 @@
 import postgres from "postgres";
+import { clampDays, finalizeStats, windowStart } from "@/lib/analytics/stats";
+import { DIRECT_REF, EVENT_RETENTION_DAYS, FUNNEL_STEPS, PURGE_PROBABILITY, type StatsRows } from "@/lib/analytics/types";
 import type { Prediction, WaitlistSignup } from "@/lib/types";
 import type { StorageAdapter } from "./adapter";
+import type { AdapterOptions } from "./file";
 import { buildPrediction, formatPredictionId, normalizeEmail, normalizePredictionId, parsePredictionSeq } from "./normalize";
 
 /**
@@ -27,7 +30,22 @@ export const SCHEMA_SQL = [
      outcome jsonb
    )`,
   `CREATE INDEX IF NOT EXISTS predictions_public_created_idx ON predictions (is_public, created_at DESC, seq DESC)`,
+  // Anonymous event counts (see /privacy). No IP, no user agent: just a per-tab random visit id.
+  `CREATE TABLE IF NOT EXISTS events (
+     id bigserial PRIMARY KEY,
+     at timestamptz NOT NULL DEFAULT now(),
+     name text NOT NULL,
+     visit_id text NOT NULL,
+     props jsonb NOT NULL DEFAULT '{}'::jsonb
+   )`,
+  `CREATE INDEX IF NOT EXISTS events_at_idx ON events (at)`,
+  `CREATE INDEX IF NOT EXISTS events_name_at_idx ON events (name, at)`,
+  `CREATE INDEX IF NOT EXISTS events_visit_at_idx ON events (visit_id, at)`,
 ];
+
+// FUNNEL_STEPS are compile-time constants ([a-z_] only), safe to inline.
+const FUNNEL_IN = FUNNEL_STEPS.map((s) => `'${s}'`).join(", ");
+const DAY_SQL = `to_char(at AT TIME ZONE 'UTC', 'YYYY-MM-DD')`;
 
 interface PredictionRow {
   seq: string | number;
@@ -52,7 +70,12 @@ function rowToPrediction(r: PredictionRow): Prediction {
   return pred;
 }
 
-export function createSqlAdapter(sql: SqlClient, now: () => Date = () => new Date()): StorageAdapter {
+export function createSqlAdapter(
+  sql: SqlClient,
+  now: () => Date = () => new Date(),
+  opts: AdapterOptions = {},
+): StorageAdapter {
+  const random = opts.random ?? Math.random;
   let ready: Promise<void> | null = null;
   const ensureSchema = () => {
     ready ??= (async () => {
@@ -66,6 +89,12 @@ export function createSqlAdapter(sql: SqlClient, now: () => Date = () => new Dat
   const seqOf = (id: string): number | null => {
     const norm = normalizePredictionId(id);
     return norm ? parsePredictionSeq(norm) : null;
+  };
+
+  const purge = async (before: Date) => {
+    await ensureSchema();
+    const rows = await sql.query(`DELETE FROM events WHERE at < $1 RETURNING id`, [before.toISOString()]);
+    return rows.length;
   };
 
   return {
@@ -148,6 +177,100 @@ export function createSqlAdapter(sql: SqlClient, now: () => Date = () => new Dat
       await ensureSchema();
       const rows = await sql.query(`DELETE FROM predictions WHERE seq = $1 RETURNING seq`, [seq]);
       return rows.length > 0;
+    },
+
+    async listWaitlist(o) {
+      await ensureSchema();
+      const rows = await sql.query<{ email: string; created_at: Date | string; source: string | null; consent_marketing: boolean }>(
+        `SELECT email, created_at, source, consent_marketing FROM waitlist
+         WHERE ($1::boolean IS NOT TRUE OR consent_marketing)
+         ORDER BY created_at DESC, email`,
+        [o?.consentOnly === true],
+      );
+      return rows.map((r) => {
+        const out: WaitlistSignup = {
+          email: r.email,
+          createdAt: new Date(r.created_at).toISOString(),
+          consentMarketing: r.consent_marketing === true,
+        };
+        if (r.source) out.source = r.source;
+        return out;
+      });
+    },
+
+    async recordEvent(e) {
+      await ensureSchema();
+      await sql.query(`INSERT INTO events (at, name, visit_id, props) VALUES ($1, $2, $3, $4::jsonb)`, [
+        e.at || now().toISOString(),
+        e.name,
+        e.visitId,
+        JSON.stringify(e.props ?? {}),
+      ]);
+      if (random() < PURGE_PROBABILITY) await purge(new Date(now().getTime() - EVENT_RETENTION_DAYS * 86_400_000));
+    },
+
+    purgeEvents(before) {
+      return purge(before);
+    },
+
+    async getStats(o) {
+      await ensureSchema();
+      const days = clampDays(o?.days);
+      const at = now();
+      const since = windowStart(at, days).toISOString();
+      type N = string | number;
+      const [dailyCounts, dailyVisits, sourceSteps, verdictHist, totals, waitlist, predictions] = await Promise.all([
+        sql.query<{ day: string; name: string; n: N }>(
+          `SELECT ${DAY_SQL} AS day, name, count(*) AS n FROM events WHERE at >= $1 GROUP BY 1, 2`,
+          [since],
+        ),
+        sql.query<{ day: string; n: N }>(
+          `SELECT ${DAY_SQL} AS day, count(DISTINCT visit_id) AS n FROM events WHERE at >= $1 GROUP BY 1`,
+          [since],
+        ),
+        // Each visit's source is the ref on its first page_view that carried one.
+        sql.query<{ ref: string; name: string; n: N }>(
+          `WITH src AS (
+             SELECT DISTINCT ON (visit_id) visit_id, props->>'ref' AS ref
+             FROM events WHERE at >= $1 AND name = 'page_view' AND props->>'ref' IS NOT NULL
+             ORDER BY visit_id, at, id
+           )
+           SELECT coalesce(src.ref, $2) AS ref, e.name, count(DISTINCT e.visit_id) AS n
+           FROM events e LEFT JOIN src ON src.visit_id = e.visit_id
+           WHERE e.at >= $1 AND e.name IN (${FUNNEL_IN})
+           GROUP BY 1, 2`,
+          [since, DIRECT_REF],
+        ),
+        sql.query<{ verdicts: N; visits: N }>(
+          `SELECT n AS verdicts, count(*) AS visits FROM (
+             SELECT visit_id, count(*) AS n FROM events WHERE at >= $1 AND name = 'verdict_shown' GROUP BY visit_id
+           ) t GROUP BY n`,
+          [since],
+        ),
+        sql.query<{ events: N; visits: N }>(
+          `SELECT count(*) AS events, count(DISTINCT visit_id) AS visits FROM events WHERE at >= $1`,
+          [since],
+        ),
+        sql.query<{ total: N; consenting: N }>(
+          `SELECT count(*) AS total, count(*) FILTER (WHERE consent_marketing) AS consenting FROM waitlist`,
+        ),
+        sql.query<{ total: N; resolved: N }>(
+          `SELECT count(*) AS total, count(outcome) AS resolved FROM predictions`,
+        ),
+      ]);
+      const rows: StatsRows = {
+        dailyCounts: dailyCounts.map((r) => ({ day: r.day, name: r.name, n: Number(r.n) })),
+        dailyVisits: dailyVisits.map((r) => ({ day: r.day, n: Number(r.n) })),
+        sourceSteps: sourceSteps.map((r) => ({ ref: r.ref, name: r.name, n: Number(r.n) })),
+        verdictHist: verdictHist.map((r) => ({ verdicts: Number(r.verdicts), visits: Number(r.visits) })),
+        totalEvents: Number(totals[0]?.events ?? 0),
+        totalVisits: Number(totals[0]?.visits ?? 0),
+        waitlistTotal: Number(waitlist[0]?.total ?? 0),
+        waitlistConsenting: Number(waitlist[0]?.consenting ?? 0),
+        predictionsTotal: Number(predictions[0]?.total ?? 0),
+        predictionsResolved: Number(predictions[0]?.resolved ?? 0),
+      };
+      return finalizeStats(rows, { days, now: at });
     },
   };
 }

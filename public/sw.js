@@ -1,11 +1,14 @@
 /* Sleeve or Slab service worker.
  * - Static assets (/_next/static, /icons, fonts, images): cache-first (they're content-hashed or versioned).
  * - App shell pages (navigations): stale-while-revalidate, falling back to the cached /scan shell offline.
- * - /api/*: network-first, cached copy only as an offline fallback (GET only).
+ * - /api/cards/* and /api/prices/*: network-first, cached copy only as an offline fallback (GET only).
+ *   Every other /api route (admin, billing, health, waitlist, predictions, events) and /admin pages
+ *   are never cached: they can hold private data (emails, entitlements) or must be fresh.
+ * - Responses marked Cache-Control: no-store are never cached.
  * - Never caches non-GET requests (POST waitlist, predictions, outcomes) or cross-origin requests.
  * Bump VERSION to drop old caches.
  */
-const VERSION = "v1";
+const VERSION = "v2"; // v2: stop caching admin/billing APIs; purges v1 caches
 const SHELL = `sos-shell-${VERSION}`;
 const STATIC = `sos-static-${VERSION}`;
 const API = `sos-api-${VERSION}`;
@@ -31,8 +34,10 @@ self.addEventListener("activate", (event) => {
 });
 
 function cacheable(res) {
-  return res && res.ok && res.type === "basic";
+  return res && res.ok && res.type === "basic" && !/no-store|private/i.test(res.headers.get("cache-control") || "");
 }
+
+const CACHEABLE_API = /^\/api\/(cards|prices)\//;
 
 async function cacheFirst(req) {
   const cache = await caches.open(STATIC);
@@ -82,9 +87,10 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/_next/webpack-hmr") || url.pathname.startsWith("/__nextjs")) return;
 
   if (url.pathname.startsWith("/api/")) {
-    event.respondWith(networkFirst(req, API));
-    return;
+    if (CACHEABLE_API.test(url.pathname)) event.respondWith(networkFirst(req, API));
+    return; // everything else goes straight to the network
   }
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return;
   if (
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||

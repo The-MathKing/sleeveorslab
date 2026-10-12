@@ -4,6 +4,7 @@
 import { Smartphone } from "lucide-react";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics/client";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
@@ -27,7 +28,10 @@ export function PhoneHandoff({ path = "/scan" }: { path?: string }) {
     const target = `${origin.replace(/\/$/, "")}${path}?from=qr`;
     setUrl(target);
     QRCode.toString(target, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#15171c", light: "#ffffff" } })
-      .then(setSvg)
+      .then((s) => {
+        setSvg(s);
+        track("qr_shown");
+      })
       .catch(() => setSvg(null));
   }, [path]);
 

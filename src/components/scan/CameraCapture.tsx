@@ -34,7 +34,7 @@ export function cameraSupported(): boolean {
 interface Props {
   open: boolean;
   sideLabel: string;
-  onCapture: (canvas: HTMLCanvasElement) => void;
+  onCapture: (canvas: HTMLCanvasElement, method: "camera-auto" | "camera-manual") => void;
   onClose: () => void;
   /** Called when the live camera can't start, so the caller can fall back to the native picker. */
   onUnavailable: (reason: string) => void;
@@ -131,7 +131,7 @@ export function CameraCapture({ open, sideLabel, onCapture, onClose, onUnavailab
     return c;
   }, [facing]);
 
-  const capture = useCallback(() => {
+  const capture = useCallback((method: "camera-auto" | "camera-manual" = "camera-manual") => {
     if (doneRef.current) return;
     const c = grab(MAX_SIDE);
     if (!c) return;
@@ -143,7 +143,7 @@ export function CameraCapture({ open, sideLabel, onCapture, onClose, onUnavailab
       /* not supported */
     }
     stop();
-    onCapture(drawScaled(c, c.width, c.height));
+    onCapture(drawScaled(c, c.width, c.height), method);
   }, [grab, onCapture, stop]);
 
   // Auto-capture loop: detect on a small frame, snap after STEADY_CHECKS steady readings.
@@ -186,7 +186,7 @@ export function CameraCapture({ open, sideLabel, onCapture, onClose, onUnavailab
       setStatus("steady");
       if (count >= STEADY_CHECKS) {
         window.clearInterval(id);
-        capture();
+        capture("camera-auto");
       }
     }, CHECK_MS);
     return () => window.clearInterval(id);
@@ -274,7 +274,7 @@ export function CameraCapture({ open, sideLabel, onCapture, onClose, onUnavailab
           <button
             ref={shutterRef}
             type="button"
-            onClick={capture}
+            onClick={() => capture("camera-manual")}
             disabled={status === "starting"}
             aria-label="Take photo"
             className="relative flex size-20 items-center justify-center rounded-full border-4 border-white disabled:opacity-50"

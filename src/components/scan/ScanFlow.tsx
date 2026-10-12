@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { ArrowLeft, Check, ChevronRight, ScanText } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics/client";
 import { getCollectionItem } from "@/lib/store";
 import type { CardRef, CenteringMeasurement, CenteringResult, CollectionItem } from "@/lib/types";
 import { CardSearch } from "./CardSearch";
@@ -35,6 +36,11 @@ export function ScanFlow() {
   const frontCanvas = useRef<HTMLCanvasElement | null>(null);
   const [hasFrontImage, setHasFrontImage] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
+
+  // One scan_started per fresh run (mount and each "Scan another"); re-runs of saved cards don't count.
+  useEffect(() => {
+    if (!rerunId) track("scan_started");
+  }, [runKey, rerunId]);
 
   // Re-run a saved card with fresh prices: /scan?rerun=<collection id>
   useEffect(() => {
@@ -126,7 +132,10 @@ export function ScanFlow() {
             }}
           />
           <StepNav
-            onNext={() => go(1)}
+            onNext={() => {
+              track("centering_done");
+              go(1);
+            }}
             nextDisabled={!front}
             nextLabel="Next: back"
             skipLabel={front ? undefined : "Skip photo"}
@@ -189,6 +198,7 @@ export function ScanFlow() {
             onQueryChange={setQuery}
             autoFocus={!card}
             onPick={(c) => {
+              track("card_selected");
               setCard(c);
               go(3);
             }}

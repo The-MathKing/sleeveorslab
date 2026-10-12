@@ -13,6 +13,8 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { track } from "@/lib/analytics/client";
+import type { PhotoMethod } from "@/lib/analytics/types";
 import { detectCentering, measureFromQuads, formatRatio } from "@/lib/centering";
 import { centeringCaps } from "@/lib/grading";
 import type { CenteringCap, CenteringMeasurement, CenteringResult, Point, Quad } from "@/lib/types";
@@ -242,7 +244,7 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
   }, [loaded]);
 
   const ingestCanvas = useCallback(
-    async (canvas: HTMLCanvasElement) => {
+    async (canvas: HTMLCanvasElement, method?: PhotoMethod) => {
       setError(null);
       setBusy("Measuring borders…");
       setSelected(null);
@@ -280,12 +282,13 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
       setAdjusted(false);
       setBusy(null);
       onImageRef.current?.(canvas);
+      if (method) track("photo_captured", { method });
     },
     [],
   );
 
   const ingestBlob = useCallback(
-    async (blob: Blob) => {
+    async (blob: Blob, method: PhotoMethod = "upload") => {
       if (!blob.type.startsWith("image/")) {
         setError("That's not an image. Use a JPG, PNG, or HEIC photo.");
         return;
@@ -294,7 +297,7 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
       setError(null);
       try {
         const canvas = await blobToCanvas(blob);
-        await ingestCanvas(canvas);
+        await ingestCanvas(canvas, method);
       } catch (e) {
         setBusy(null);
         setError(e instanceof Error ? e.message : "Couldn't load that photo.");
@@ -309,14 +312,15 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
     else cameraRef.current?.click();
   }, []);
   const onCameraCapture = useCallback(
-    (canvas: HTMLCanvasElement) => {
+    (canvas: HTMLCanvasElement, method: PhotoMethod) => {
       setCameraOpen(false);
-      void ingestCanvas(canvas);
+      void ingestCanvas(canvas, method);
     },
     [ingestCanvas],
   );
   const onCameraClose = useCallback(() => setCameraOpen(false), []);
   const onCameraUnavailable = useCallback((reason: string) => {
+    track("camera_unavailable");
     setCameraOpen(false);
     setError(reason);
     cameraRef.current?.click();
@@ -324,7 +328,7 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
 
   const loadSample = useCallback(() => {
     try {
-      void ingestCanvas(makeSampleCard());
+      void ingestCanvas(makeSampleCard(), "sample");
     } catch {
       setError("Couldn't draw the sample card in this browser.");
     }
@@ -531,7 +535,7 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
         aria-hidden
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) void ingestBlob(f);
+          if (f) void ingestBlob(f, "camera-manual");
           e.target.value = "";
         }}
       />

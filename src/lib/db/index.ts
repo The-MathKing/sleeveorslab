@@ -1,12 +1,13 @@
 // Server-side storage. Postgres when DATABASE_URL is set (required on serverless hosts
 // like Vercel, whose filesystem is read-only); file-backed JSON in ./.data (or $DATA_DIR) otherwise.
 import path from "node:path";
+import type { AnalyticsStats } from "@/lib/analytics/types";
 import type { Prediction, WaitlistSignup } from "@/lib/types";
-import type { StorageAdapter } from "./adapter";
+import type { RecordEventInput, StorageAdapter } from "./adapter";
 import { createFileAdapter } from "./file";
 import { createPostgresAdapter } from "./postgres";
 
-export type { StorageAdapter } from "./adapter";
+export type { RecordEventInput, StorageAdapter } from "./adapter";
 export { createFileAdapter } from "./file";
 export { createSqlAdapter, type SqlClient } from "./postgres";
 export { normalizeEmail, normalizePredictionId } from "./normalize";
@@ -62,4 +63,13 @@ export function deleteWaitlist(email: string): Promise<boolean> {
 }
 export function deletePrediction(id: string): Promise<boolean> {
   return getStorage().deletePrediction(id);
+}
+export function listWaitlist(opts?: { consentOnly?: boolean }): Promise<WaitlistSignup[]> {
+  return getStorage().listWaitlist(opts);
+}
+export function recordEvent(e: RecordEventInput): Promise<void> {
+  return getStorage().recordEvent(e);
+}
+export function getStats(opts?: { days?: number }): Promise<AnalyticsStats> {
+  return getStorage().getStats(opts);
 }

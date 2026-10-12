@@ -44,6 +44,10 @@ export default function PrivacyPage() {
             <strong>Waitlist email</strong>, where you signed up from, and whether you opted in to occasional emails.
           </li>
           <li>
+            <strong>Anonymous usage counts</strong>, with no cookies and nothing that identifies you. Details under
+            &ldquo;Cookies and tracking&rdquo; below.
+          </li>
+          <li>
             <strong>Basic server logs</strong> (IP address, user agent, requested URL) kept for security and debugging.
           </li>
         </ul>
@@ -63,15 +67,45 @@ export default function PrivacyPage() {
         <h2>Retention and deletion</h2>
         <ul>
           <li>Server logs are deleted after 90 days.</li>
+          <li>Anonymous usage counts (see below) are deleted after 90 days.</li>
           <li>Ask us to delete anything we hold (a waitlist email, a public prediction) and we&apos;ll do it within 90 days, usually much sooner.</li>
           <li>Waitlist emails are deleted 90 days after launch if you don&apos;t become a user.</li>
         </ul>
 
         <h2>Cookies and tracking</h2>
         <p>
-          No advertising cookies, no third-party ad trackers, no selling or sharing personal data. If we add privacy-friendly
-          analytics, we&apos;ll list it here first.
+          No cookies of any kind, no advertising, no third-party trackers, no selling or sharing personal data.
         </p>
+        <p>
+          We do count a few things ourselves, on our own server, so we know whether the app is useful: page views, scans
+          started, photos taken (camera, upload, or sample), verdicts shown (SLAB/SLEEVE/BORDERLINE and the grader), waitlist
+          sign-ups, public predictions logged, and share taps. Here&apos;s exactly how:
+        </p>
+        <ul>
+          <li>
+            <strong>Anonymous, per tab.</strong> Each browser tab gets a random visit id, kept in that tab&apos;s session storage
+            and gone when you close it. It isn&apos;t linked to your email, your cards, or any other visit.
+          </li>
+          <li>
+            <strong>No cookies, no fingerprinting.</strong> Nothing is stored in cookies or long-term browser storage.
+          </li>
+          <li>
+            <strong>No IP address or browser details stored</strong> with these counts. We keep the site you came from
+            (just the domain, like reddit.com), never the full link.
+          </li>
+          <li>
+            <strong>Never your photos, card details, or email.</strong> A verdict count says &ldquo;a SLEEVE verdict
+            happened&rdquo;, not which card.
+          </li>
+          <li>
+            <strong>Do Not Track and Global Privacy Control are honored.</strong> If your browser sends either, the app sends us
+            nothing at all.
+          </li>
+          <li>
+            <strong>Used only in aggregate</strong>, as totals like &ldquo;how many visits got to a verdict this week&rdquo;.
+            Raw counts are deleted after 90 days.
+          </li>
+        </ul>
 
         <h2>Children</h2>
         <p>

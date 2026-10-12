@@ -3,6 +3,7 @@ import clsx from "clsx";
 import Link from "next/link";
 import { BookmarkPlus, Check, ChevronDown, Megaphone, RotateCcw, ScanLine, Share2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@/lib/analytics/client";
 import { buildPriceLadder, evaluate, evaluateAllGraders, resolveRaw } from "@/lib/ev";
 import { eraOf, FEES_LAST_VERIFIED, gemRatePrior, getTiers } from "@/lib/grading";
 import {
@@ -157,6 +158,7 @@ function VerdictBody({
     markVerdictThisSession();
     const count = countsTowardLimit ? countVerdict() : 0;
     setGate({ firstInSession, count });
+    track("verdict_shown", { verdict: computed.best.verdict, grader: computed.best.grader });
   }, [computed.best, countsTowardLimit]);
 
   if (computed.error || !computed.selected || !computed.best) {
@@ -763,6 +765,7 @@ function Actions({
       });
       setLogged(p);
       setLogState("idle");
+      track("prediction_logged");
     } catch (e) {
       setLogState("error");
       setLogErr(e instanceof Error ? e.message : "Couldn't log it.");
@@ -770,6 +773,7 @@ function Actions({
   };
 
   const share = async () => {
+    track("share_clicked");
     const saved = result.verdict === "SLEEVE" ? result.totalCostUsd : Math.max(0, result.expectedProfitUsd);
     const url = shareUrl({ saved, cards: 1, verdict: result.verdict, name: card.name });
     const text =

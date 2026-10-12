@@ -5,6 +5,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox, Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
+import { sourceToken, track } from "@/lib/analytics/client";
 
 type Status = "idle" | "sending" | "done" | "error";
 
@@ -56,6 +57,7 @@ export function WaitlistForm({ source = "landing", cta = "Join the waitlist" }: 
         throw new Error(res.status === 404 ? "The waitlist isn't open yet. Try again in a day or two." : j?.error || "Something broke on our end.");
       }
       if (typeof j.count === "number") setCount(j.count);
+      if (!j.duplicate) track("waitlist_signup", { source: sourceToken(source) });
       setStatus("done");
       toast({
         tone: "good",

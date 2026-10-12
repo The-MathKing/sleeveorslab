@@ -12,6 +12,8 @@ export const LIMITS = {
   waitlistPost: { name: "waitlist-post", max: 5, windowMs: 60_000 },
   predictionsPost: { name: "predictions-post", max: 5, windowMs: 60_000 },
   outcomePost: { name: "outcome-post", max: 30, windowMs: 60_000 },
+  events: { name: "events", max: 120, windowMs: 60_000 },
+  admin: { name: "admin", max: 60, windowMs: 60_000 },
 } as const;
 
 export type Limit = (typeof LIMITS)[keyof typeof LIMITS];

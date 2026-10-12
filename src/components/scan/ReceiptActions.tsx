@@ -2,6 +2,7 @@
 import { Printer, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics/client";
 import type { Grade } from "@/lib/types";
 import { Button } from "@/components/ui";
 import { Btn, FieldLabel, TextInput } from "./parts";
@@ -9,6 +10,7 @@ import { Btn, FieldLabel, TextInput } from "./parts";
 export function ReceiptToolbar({ id, title }: { id: string; title: string }) {
   const [msg, setMsg] = useState("");
   const share = async () => {
+    track("share_clicked");
     const url = `${location.origin}/receipts/${encodeURIComponent(id)}`;
     try {
       if (navigator.share) {
