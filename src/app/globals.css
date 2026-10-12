@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/*
+  Sleeve or Slab — brand tokens.
+  Two-state system: SLEEVE (clear-plastic blue-gray, the honest default)
+  vs SLAB (gold, the rare "yes, grade it"). BORDERLINE uses amber.
+  Ink + paper neutrals; monospace for every number so math reads like a receipt.
+*/
+:root {
+  --paper: #f7f6f2;
+  --paper-2: #efede6;
+  --card: #ffffff;
+  --ink: #15171c;
+  --ink-2: #4a4f5c;
+  --ink-3: #8a8f9c;
+  --line: #dedbd2;
+
+  --sleeve: #5b7a99;
+  --sleeve-soft: #e3eaf1;
+  --sleeve-ink: #2c4560;
+
+  --slab: #c9971c;
+  --slab-soft: #f8edd0;
+  --slab-ink: #6b4d05;
+
+  --borderline: #d9741e;
+  --borderline-soft: #fbe6d3;
+
+  --good: #2f8f5b;
+  --bad: #c0392b;
+
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101216;
+    --paper-2: #171a20;
+    --card: #1b1f26;
+    --ink: #f1efe9;
+    --ink-2: #b8bcc7;
+    --ink-3: #7d8290;
+    --line: #2a2f38;
+    --sleeve: #8fb0d0;
+    --sleeve-soft: #1d2a38;
+    --sleeve-ink: #c8daec;
+    --slab: #e8b93a;
+    --slab-soft: #33280c;
+    --slab-ink: #f6dc94;
+    --borderline: #f0954a;
+    --borderline-soft: #3a2413;
+    --good: #4cc488;
+    --bad: #ef6b5b;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-sleeve: var(--sleeve);
+  --color-sleeve-soft: var(--sleeve-soft);
+  --color-sleeve-ink: var(--sleeve-ink);
+  --color-slab: var(--slab);
+  --color-slab-soft: var(--slab-soft);
+  --color-slab-ink: var(--slab-ink);
+  --color-borderline: var(--borderline);
+  --color-borderline-soft: var(--borderline-soft);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-sans-face);
+  --font-display: var(--font-display-face);
+  --font-mono: var(--font-mono-face);
+  --radius-card: var(--radius);
+}
+
+html { background: var(--paper); }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans-face), system-ui, sans-serif;
+}
