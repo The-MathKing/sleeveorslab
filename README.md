@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sleeve or Slab
 
-## Getting Started
+**The app that tells you when not to grade.** Snap a Pokémon card, check its centering on-device, and get an expected-value verdict (SLAB IT / SLEEVE IT / BORDERLINE) for PSA and CGC, with every fee and assumption shown.
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm test           # vitest: engines, data layer, centering detector
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No API keys needed to start. Optional env vars are in `.env.example` (pokemontcg.io key for higher rate limits, PriceCharting key for real graded prices, `ADMIN_TOKEN` for recording verified grades).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What's in it
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | What it does |
+|---|---|
+| `/` | Landing page with a live, on-device centering demo |
+| `/scan` | Front/back photo → centering → card search (+ optional OCR) → condition check → verdict |
+| `/binder` | Batch triage: paste a list, ranked by expected profit, CSV export |
+| `/receipts` | Public prediction log, published before grades come back |
+| `/collection` | Saved cards, stored on your device only |
+| `/fees`, `/how-it-works`, `/pricing`, `/privacy`, `/terms`, `/disclaimer` | Marketing and legal |
 
-## Learn More
+Architecture and module ownership: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Brand guide: [`docs/BRAND.md`](docs/BRAND.md). Fees live in one file: [`src/lib/grading/fees.ts`](src/lib/grading/fees.ts).
 
-To learn more about Next.js, take a look at the following resources:
+## Before launch
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Storage:** waitlist and predictions use a JSON file in `.data/`, which does not persist on serverless hosts (Vercel). Implement the Postgres adapter in `src/lib/db/postgres.ts` and set `DATABASE_URL`.
+- **Fees:** values marked "Verify on grader site" in `fees.ts` need checking against PSA/CGC.
+- **Recording outcomes:** visitors email their cert; an admin records it at `/receipts/<id>?admin=1` with `ADMIN_TOKEN`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Estimates, not financial advice. Not affiliated with PSA, CGC, Nintendo, or The Pokémon Company.

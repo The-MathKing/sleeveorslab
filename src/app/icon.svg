@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .o{stroke:#15171c}.i{stroke:#ffffff}
+    @media (prefers-color-scheme:dark){.o{stroke:#f1efe9}.i{stroke:#1b1f26}}
+  </style>
+  <path d="M8.5 2.5H16v27H8.5A2.5 2.5 0 0 1 6 27V5a2.5 2.5 0 0 1 2.5-2.5z" fill="#5b7a99"/>
+  <path d="M16 2.5h7.5A2.5 2.5 0 0 1 26 5v22a2.5 2.5 0 0 1-2.5 2.5H16z" fill="#c9971c"/>
+  <rect class="i" x="10" y="9" width="13" height="16.5" rx="1" fill="none" stroke-width="2"/>
+  <rect class="o" x="6" y="2.5" width="20" height="27" rx="2.5" fill="none" stroke-width="1.5"/>
+</svg>

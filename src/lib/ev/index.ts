@@ -1,5 +1,5 @@
 // Expected-value engine: pure, deterministic, unit-tested.
-export { gradeDistribution, expectedGrade, gemProbability, GRADES, NON_GEM_SHAPE, CONDITION_SHIFT_PER_STEP } from "./distribution";
+export { gradeDistribution, expectedGrade, gemProbability, GRADES, NON_GEM_SHAPE, CONDITION_SHIFT_UP_PER_STEP, CONDITION_SHIFT_DOWN_PER_STEP } from "./distribution";
 export {
   evaluate, evaluateAllGraders,
   DEFAULT_SHIPPING_PER_CARD_USD, DEFAULT_SELLING_FEE_RATE, DEFAULT_ANNUAL_PRICE_DRIFT, BUSINESS_DAYS_PER_YEAR,

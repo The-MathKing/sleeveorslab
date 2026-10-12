@@ -1,86 +1,271 @@
 @import "tailwindcss";
 
 /*
-  Sleeve or Slab — brand tokens.
+  Sleeve or Slab — brand tokens. See docs/BRAND.md.
   Two-state system: SLEEVE (clear-plastic blue-gray, the honest default)
   vs SLAB (gold, the rare "yes, grade it"). BORDERLINE uses amber.
   Ink + paper neutrals; monospace for every number so math reads like a receipt.
+
+  Token NAMES are a shared contract (other modules use bg-sleeve-soft etc).
+  Change values freely, never rename.
 */
 :root {
-  --paper: #f7f6f2;
-  --paper-2: #efede6;
-  --card: #ffffff;
+  --paper: #f6f4ee;
+  --paper-2: #ece9e0;
+  --card: #fffefb;
+  --receipt: #fdfcf7;
   --ink: #15171c;
-  --ink-2: #4a4f5c;
-  --ink-3: #8a8f9c;
-  --line: #dedbd2;
+  --ink-2: #474c58;
+  --ink-3: #7c818d;
+  --line: #dcd8cc;
+  --line-strong: #c4bfb0;
 
   --sleeve: #5b7a99;
   --sleeve-soft: #e3eaf1;
   --sleeve-ink: #2c4560;
+  --sleeve-deep: #3f5d7c;
 
   --slab: #c9971c;
   --slab-soft: #f8edd0;
   --slab-ink: #6b4d05;
+  --slab-deep: #9c7008;
 
   --borderline: #d9741e;
   --borderline-soft: #fbe6d3;
+  --borderline-ink: #8a4209;
 
   --good: #2f8f5b;
   --bad: #c0392b;
 
+  --focus: #2f6fd6;
+  --on-ink: #f6f4ee;
+  --shadow-card: 0 1px 0 rgb(21 23 28 / 0.04), 0 1px 2px rgb(21 23 28 / 0.06), 0 8px 24px -12px rgb(21 23 28 / 0.18);
+  --shadow-lift: 0 2px 0 rgb(21 23 28 / 0.05), 0 18px 40px -18px rgb(21 23 28 / 0.35);
+
   --radius: 14px;
+  --grain-opacity: 0.35;
+  color-scheme: light;
 }
 
+/* Dark values, applied by system preference unless data-theme="light", or forced by data-theme="dark". */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #101216;
     --paper-2: #171a20;
     --card: #1b1f26;
+    --receipt: #1e2229;
     --ink: #f1efe9;
     --ink-2: #b8bcc7;
-    --ink-3: #7d8290;
-    --line: #2a2f38;
+    --ink-3: #868b99;
+    --line: #2b3039;
+    --line-strong: #3b414c;
     --sleeve: #8fb0d0;
     --sleeve-soft: #1d2a38;
     --sleeve-ink: #c8daec;
+    --sleeve-deep: #a9c4df;
     --slab: #e8b93a;
     --slab-soft: #33280c;
     --slab-ink: #f6dc94;
+    --slab-deep: #f0c552;
     --borderline: #f0954a;
     --borderline-soft: #3a2413;
+    --borderline-ink: #fbc597;
     --good: #4cc488;
     --bad: #ef6b5b;
+    --focus: #7fb0ff;
+    --on-ink: #101216;
+    --shadow-card: 0 1px 0 rgb(0 0 0 / 0.3), 0 10px 30px -14px rgb(0 0 0 / 0.7);
+    --shadow-lift: 0 2px 0 rgb(0 0 0 / 0.3), 0 22px 44px -18px rgb(0 0 0 / 0.8);
+    --grain-opacity: 0.18;
+    color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --paper: #101216;
+  --paper-2: #171a20;
+  --card: #1b1f26;
+  --receipt: #1e2229;
+  --ink: #f1efe9;
+  --ink-2: #b8bcc7;
+  --ink-3: #868b99;
+  --line: #2b3039;
+  --line-strong: #3b414c;
+  --sleeve: #8fb0d0;
+  --sleeve-soft: #1d2a38;
+  --sleeve-ink: #c8daec;
+  --sleeve-deep: #a9c4df;
+  --slab: #e8b93a;
+  --slab-soft: #33280c;
+  --slab-ink: #f6dc94;
+  --slab-deep: #f0c552;
+  --borderline: #f0954a;
+  --borderline-soft: #3a2413;
+  --borderline-ink: #fbc597;
+  --good: #4cc488;
+  --bad: #ef6b5b;
+  --focus: #7fb0ff;
+  --on-ink: #101216;
+  --shadow-card: 0 1px 0 rgb(0 0 0 / 0.3), 0 10px 30px -14px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 0 rgb(0 0 0 / 0.3), 0 22px 44px -18px rgb(0 0 0 / 0.8);
+  --grain-opacity: 0.18;
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-paper-2: var(--paper-2);
   --color-card: var(--card);
+  --color-receipt: var(--receipt);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-on-ink: var(--on-ink);
   --color-sleeve: var(--sleeve);
   --color-sleeve-soft: var(--sleeve-soft);
   --color-sleeve-ink: var(--sleeve-ink);
+  --color-sleeve-deep: var(--sleeve-deep);
   --color-slab: var(--slab);
   --color-slab-soft: var(--slab-soft);
   --color-slab-ink: var(--slab-ink);
+  --color-slab-deep: var(--slab-deep);
   --color-borderline: var(--borderline);
   --color-borderline-soft: var(--borderline-soft);
+  --color-borderline-ink: var(--borderline-ink);
   --color-good: var(--good);
   --color-bad: var(--bad);
+  --color-focus: var(--focus);
   --font-sans: var(--font-sans-face);
   --font-display: var(--font-display-face);
   --font-mono: var(--font-mono-face);
   --radius-card: var(--radius);
+  --shadow-card: var(--shadow-card);
+  --shadow-lift: var(--shadow-lift);
 }
 
-html { background: var(--paper); }
-body {
+html {
   background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  background-color: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans-face), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+  min-height: 100dvh;
 }
+
+/* Card-stock grain. Very quiet; purely decorative. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.42 0 0 0 0 0.36 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Every number is monospace and tabular so columns of money line up like a receipt. */
+.font-mono,
+.tabular {
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+::selection {
+  background: var(--slab-soft);
+  color: var(--ink);
+}
+
+/* Visible, consistent focus everywhere. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Brand utilities ---------- */
+
+/* Torn/zig-zag receipt bottom edge. */
+.receipt-edge {
+  --zig: 14px;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--zig) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--zig) 100%;
+  padding-bottom: calc(var(--zig) / 2 + 1rem);
+}
+
+/* Dotted leader between a receipt label and its amount. */
+.leader {
+  flex: 1 1 auto;
+  min-width: 1rem;
+  border-bottom: 1.5px dotted var(--line-strong);
+  transform: translateY(-0.3em);
+}
+
+/* Penny-sleeve sheen, used on sleeve-flavoured surfaces. */
+.sleeve-sheen {
+  background-image: linear-gradient(115deg, transparent 0 38%, rgb(255 255 255 / 0.35) 44%, transparent 52% 100%);
+}
+
+/* Rubber-stamp entrance. Only animates when the user hasn't asked for reduced motion. */
+.stamp {
+  transform: rotate(var(--stamp-rot, -7deg));
+  transform-origin: 50% 55%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stamp-thunk {
+    animation: stamp-thunk 520ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+    animation-delay: var(--stamp-delay, 120ms);
+  }
+  .rise-in {
+    animation: rise-in 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+  .bar-grow {
+    animation: bar-grow 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--bar-delay, 0ms);
+    transform-origin: left center;
+  }
+  .bar-grow-y {
+    animation: bar-grow-y 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: var(--bar-delay, 0ms);
+    transform-origin: center bottom;
+  }
+}
+@keyframes stamp-thunk {
+  0% { opacity: 0; transform: rotate(calc(var(--stamp-rot, -7deg) - 8deg)) scale(1.9); }
+  55% { opacity: 1; transform: rotate(var(--stamp-rot, -7deg)) scale(0.92); }
+  75% { transform: rotate(var(--stamp-rot, -7deg)) scale(1.04); }
+  100% { opacity: 1; transform: rotate(var(--stamp-rot, -7deg)) scale(1); }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes bar-grow-y {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toast-in { animation: toast-in 220ms ease-out both; }
+}
+
+/* Hide the default <details> marker; Disclosure draws its own chevron. */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }

@@ -11,8 +11,14 @@ export const NON_GEM_SHAPE: Readonly<Record<Exclude<Grade, 10>, number>> = {
   9: 0.5, 8: 0.25, 7: 0.12, 6: 0.06, 5: 0.03, 4: 0.02, 3: 0.01, 2: 0.005, 1: 0.005,
 };
 
-/** Grades of shift per condition step away from neutral (3). Rating 5 => +0.7 grades. */
-export const CONDITION_SHIFT_PER_STEP = 0.35;
+/**
+ * Grades of shift per condition step away from neutral (3). Asymmetric on purpose: the gem
+ * prior is measured on copies people already chose to submit (who mostly believe theirs are
+ * pack fresh), so "pack fresh" barely helps, while admitted wear hurts a lot.
+ * Rating 5 => +0.3 grades; rating 1 => -1.1 grades.
+ */
+export const CONDITION_SHIFT_UP_PER_STEP = 0.15;
+export const CONDITION_SHIFT_DOWN_PER_STEP = 0.55;
 export const MIN_P_GEM = 0.001;
 export const MAX_P_GEM = 0.98;
 
@@ -56,7 +62,8 @@ export function gradeDistribution(args: DistributionArgs): GradeDistribution {
 
   const rating = typeof args.conditionSelfRating === "number" && Number.isFinite(args.conditionSelfRating)
     ? clamp(args.conditionSelfRating, 1, 5) : 3;
-  let q = shift(p, (rating - 3) * CONDITION_SHIFT_PER_STEP);
+  const steps = rating - 3;
+  let q = shift(p, steps * (steps > 0 ? CONDITION_SHIFT_UP_PER_STEP : CONDITION_SHIFT_DOWN_PER_STEP));
 
   if (args.centering) {
     const cap = centeringCaps(args.centering).find((c) => c.grader === args.grader)?.maxGrade ?? 10;

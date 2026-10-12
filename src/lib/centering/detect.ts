@@ -21,6 +21,23 @@ const BANDS = 8;
 const MAX_ROWS_PER_BAND = 64;
 
 type Gray = (x: number, y: number) => number;
+/** Colour difference between two pixels. Yellow borders and silver frames often share
+ *  luminance, so edges are measured in RGB, not grayscale. */
+type Diff = (x0: number, y0: number, x1: number, y1: number) => number;
+
+function colorDiffAccessor(img: ImageLike): Diff {
+  const { width, height, data } = img;
+  const idx = (x: number, y: number) => {
+    const xi = x < 0 ? 0 : x >= width ? width - 1 : x;
+    const yi = y < 0 ? 0 : y >= height ? height - 1 : y;
+    return (yi * width + xi) * 4;
+  };
+  return (x0, y0, x1, y1) => {
+    const a = idx(x0, y0), b = idx(x1, y1);
+    const dr = data[a] - data[b], dg = data[a + 1] - data[b + 1], db = data[a + 2] - data[b + 2];
+    return Math.sqrt((dr * dr + dg * dg + db * db) / 3);
+  };
+}
 
 function grayAccessor(img: ImageLike): Gray {
   const { width, height, data } = img;
@@ -97,13 +114,13 @@ interface EdgeHit { pos: number; strength: number }
  * Gradient profile along a scan line set. `vertical` = vertical edge (scan x).
  * Positions are in edge coordinates (boundary between pixels i-1 and i = i).
  */
-function profile(g: Gray, vertical: boolean, lo: number, hi: number, across: number[]): Float64Array {
+function profile(d: Diff, vertical: boolean, lo: number, hi: number, across: number[]): Float64Array {
   const n = hi - lo + 1;
   const out = new Float64Array(n);
   for (let k = 0; k < n; k++) {
     const t = lo + k;
     let s = 0;
-    for (const a of across) s += vertical ? Math.abs(g(t + 1, a) - g(t - 1, a)) : Math.abs(g(a, t + 1) - g(a, t - 1));
+    for (const a of across) s += vertical ? d(t + 1, a, t - 1, a) : d(a, t + 1, a, t - 1);
     out[k] = s / across.length;
   }
   return out;
@@ -183,7 +200,7 @@ function detectInner(img: ImageLike): CenteringMeasurement | undefined {
   const cB = outermostPeak(rs, h - 2, Math.ceil(h * 0.55));
   if (cL < 0 || cR < 0 || cT < 0 || cB < 0) return undefined;
 
-  const g = grayAccessor(img);
+  const g = colorDiffAccessor(img);
   const W = img.width, H = img.height;
   // coarse in full-res edge coordinates
   const coarse: Record<Side, number> = {

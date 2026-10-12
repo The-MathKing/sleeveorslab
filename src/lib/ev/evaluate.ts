@@ -179,8 +179,16 @@ export function evaluate(input: EVInput): EVResult {
 }
 
 /** Evaluate every available PSA and CGC tier; best = highest expected profit. */
-export function evaluateAllGraders(input: Omit<EVInput, "grader" | "tierId">): { best: EVResult; all: EVResult[] } {
+export function evaluateAllGraders(
+  input: Omit<EVInput, "grader" | "tierId">,
+  opts: { batchSize?: number } = {},
+): { best: EVResult; all: EVResult[] } {
+  const batchSize = opts.batchSize ?? 1;
   const all = getTiers().filter((t) => t.available).map((t) => evaluate({ ...input, grader: t.grader, tierId: t.id }));
-  const best = all.reduce((a, b) => (b.expectedProfitUsd > a.expectedProfitUsd ? b : a));
+  // Bulk tiers (e.g. CGC Bulk, 25-card minimum) stay in `all` for comparison but can only win
+  // when the caller is triaging a batch big enough to meet the minimum.
+  const eligible = all.filter((r) => (r.tier.minCards ?? 1) <= batchSize);
+  const pool = eligible.length > 0 ? eligible : all;
+  const best = pool.reduce((a, b) => (b.expectedProfitUsd > a.expectedProfitUsd ? b : a));
   return { best, all };
 }
