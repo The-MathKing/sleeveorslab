@@ -109,7 +109,8 @@ describe("network functions (mocked fetch)", () => {
     const u = new URL(String(url));
     expect(u.searchParams.get("q")).toBe("name:charizard* number:199");
     expect(u.searchParams.get("orderBy")).toBe("-set.releaseDate");
-    expect(u.searchParams.get("pageSize")).toBe("5");
+    // name queries fetch a wider candidate pool, re-ranked locally, then trimmed to `limit`
+    expect(u.searchParams.get("pageSize")).toBe("100");
     expect(init.headers["X-Api-Key"]).toBe("k123");
     // cached: second call doesn't hit the network; raw card cache is warmed too
     await searchCards("charizard 199", { limit: 5 });

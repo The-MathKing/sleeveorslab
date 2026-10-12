@@ -5,15 +5,23 @@ import type { CardRef } from "@/lib/types";
 import { TTLCache } from "./cache";
 import { toCardRef, type RawPtcgCard } from "./map";
 import { buildLuceneQuery, isEmptyQuery, parseQuery } from "./query";
+import { rankCards } from "./rank";
 
 export { parseQuery, buildLuceneQuery } from "./query";
 export { inferFinish, toCardRef, toIsoDate } from "./map";
 export type { RawPtcgCard, TcgPlayerPriceBlock } from "./map";
+export { rankCards, nameTier, normalizeName, NameTier } from "./rank";
 
 const API_BASE = "https://api.pokemontcg.io/v2";
 const TIMEOUT_MS = 6_000;
 const TTL_MS = 10 * 60 * 1000;
 const SELECT_FIELDS = "id,name,number,rarity,subtypes,supertype,set,images,tcgplayer";
+/**
+ * The provider can only sort by a field (newest set first), so name queries fetch a wider
+ * candidate pool that we re-rank locally (exact name > starts-with > contains) before trimming
+ * to `limit`. Otherwise plain "Pikachu" can sit behind dozens of newer "Pikachu ex"/tag-team cards.
+ */
+const NAME_CANDIDATE_POOL = 100;
 
 /** Thrown when the upstream provider fails (network, timeout, 5xx). Routes map it to 502. */
 export class CardProviderError extends Error {
@@ -106,12 +114,14 @@ export async function searchCards(q: string, opts?: { limit?: number }): Promise
   const parsed = parseQuery(q ?? "");
   if (isEmptyQuery(parsed)) return [];
 
-  let results = await rawSearch(buildLuceneQuery(parsed), limit);
+  const pageSize = parsed.nameTokens.length ? Math.max(limit, NAME_CANDIDATE_POOL) : limit;
+  let results = await rawSearch(buildLuceneQuery(parsed), pageSize);
   // "charizard 4" with a typo'd number: fall back to name (+set) only.
   if (results.length === 0 && (parsed.number || parsed.printedTotal) && parsed.nameTokens.length) {
-    results = await rawSearch(buildLuceneQuery(parsed, { includeNumber: false }), limit);
+    results = await rawSearch(buildLuceneQuery(parsed, { includeNumber: false }), pageSize);
   }
-  return results.map(toCardRef);
+  const printedTotals = new Map(results.map((r) => [r.id, r.set?.printedTotal]));
+  return rankCards(results.map(toCardRef), parsed, printedTotals).slice(0, limit);
 }
 
 /**

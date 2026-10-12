@@ -26,6 +26,9 @@ export async function GET() {
     priceSource: process.env.PRICECHARTING_API_KEY ? "pricecharting" : "tcgplayer-via-pokemontcg",
     commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
     vercelEnv: process.env.VERCEL_ENV ?? null,
+    // Deployment hostname, e.g. <project>-<hash>-<team>.vercel.app: identifies which Vercel project serves the site.
+    deploymentHost: process.env.VERCEL_URL ?? null,
+    productionHost: process.env.VERCEL_PROJECT_PRODUCTION_URL ?? null,
     // Names only (never values) of config-related variables, to debug integration prefixes.
     configVarNames: Object.keys(process.env)
       .filter((k) => /DATABASE|POSTGRES|^PG|NEON|ADMIN|STRIPE|SITE_URL|POKEMONTCG|PRICECHARTING/i.test(k))
