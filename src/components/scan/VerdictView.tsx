@@ -17,6 +17,7 @@ import {
   waitlistJoined,
 } from "@/lib/store";
 import type { CardRef, CenteringResult, EVResult, Grade, GraderId, GradingTier, Prediction, PriceQuote } from "@/lib/types";
+import { UpgradePanel, useEntitlement } from "@/components/billing";
 import { EmailCapture } from "./EmailCapture";
 import { fetchPrice, pct, postPrediction, shareImage, shareUrl, shortDate, usd } from "./format";
 import { Bar, Btn, CardThumb, ErrorNote, EstimateTag, FieldLabel, Money, Panel, Segmented, Skeleton, TextInput, UsdInput } from "./parts";
@@ -151,6 +152,12 @@ function VerdictBody({
   // Count the verdict once per mount; decide on email capture / soft limit.
   const [gate, setGate] = useState<{ firstInSession: boolean; count: number } | null>(null);
   const counted = useRef(false);
+  // Past the free daily verdicts: Pro is unlimited, a pack spends one credit, otherwise show the upgrade.
+  // Still soft: the verdict is already on screen either way.
+  const ent = useEntitlement();
+  const consumeRef = useRef(ent.consume);
+  consumeRef.current = ent.consume;
+  const [paidOk, setPaidOk] = useState<boolean | null>(null);
   useEffect(() => {
     if (counted.current || !computed.best) return;
     counted.current = true;
@@ -158,6 +165,7 @@ function VerdictBody({
     markVerdictThisSession();
     const count = countsTowardLimit ? countVerdict() : 0;
     setGate({ firstInSession, count });
+    if (count > FREE_VERDICTS_PER_DAY) void consumeRef.current(1).then((r) => setPaidOk(r.ok));
     track("verdict_shown", { verdict: computed.best.verdict, grader: computed.best.grader });
   }, [computed.best, countsTowardLimit]);
 
@@ -316,14 +324,8 @@ function VerdictBody({
         onScanAnother={onScanAnother}
       />
 
-      {gate && gate.count > FREE_VERDICTS_PER_DAY && !waitlistJoined() ? (
-        <EmailCapture
-          source="soft-limit"
-          tone="slab"
-          dismissible={false}
-          title="Pro is coming — join the waitlist"
-          body={`That's ${gate.count} verdicts today. Free covers ${FREE_VERDICTS_PER_DAY} a day; keep going for now, it's on us. Pro adds unlimited scans, saved binders across devices, and price alerts.`}
-        />
+      {gate && gate.count > FREE_VERDICTS_PER_DAY && paidOk === false ? (
+        <UpgradePanel source="soft-limit" count={gate.count} hideWaitlist={waitlistJoined()} />
       ) : gate?.firstInSession && !waitlistJoined() && !waitlistDismissed() ? (
         <EmailCapture
           source="after-first-verdict"

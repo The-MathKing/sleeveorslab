@@ -14,6 +14,7 @@ export const NAV_LINKS = [
   { href: "/receipts", label: "Receipts" },
   { href: "/collection", label: "Collection" },
   { href: "/fees", label: "Fees" },
+  { href: "/pricing", label: "Pricing" },
 ] as const;
 
 function isActive(pathname: string, href: string) {

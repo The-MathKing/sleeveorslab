@@ -8,6 +8,8 @@ import { Card, CardDescription, Eyebrow } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input, Select } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
+import { Tabs } from "@/components/ui/Tabs";
+import { BillingPanel } from "@/components/billing";
 import { AdminError, adminJson, loadToken, saveToken } from "./api";
 import { DailyChart, FunnelCard, GateCard, ReferrersCard, VerdictsCard } from "./StatsSections";
 import { PredictionsAdmin } from "./PredictionsAdmin";
@@ -80,6 +82,13 @@ const DAY_OPTIONS = [7, 14, 21, 30, 60, 90].map((d) => ({ value: String(d), labe
 
 function Dashboard({ token, onSignOut }: { token: string; onSignOut: (why?: string) => void }) {
   const [days, setDays] = useState(30);
+  const [tab, setTab] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get("tab") ?? "metrics";
+    } catch {
+      return "metrics";
+    }
+  });
   const [stats, setStats] = useState<AnalyticsStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +126,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: (why?: stri
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Eyebrow>Internal · not indexed</Eyebrow>
-          <h1 className="font-display text-3xl font-bold uppercase tracking-wide text-ink">Launch metrics</h1>
+          <h1 className="font-display text-3xl font-bold uppercase tracking-wide text-ink">Admin</h1>
           <p className="text-sm text-ink-3">
             {stats
               ? `Since ${stats.since} (UTC) · ${stats.totalVisits.toLocaleString()} visits · ${stats.totalEvents.toLocaleString()} events · updated ${new Date(stats.generatedAt).toLocaleTimeString()}`
@@ -155,24 +164,40 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: (why?: stri
         </p>
       ) : null}
 
-      {stats ? (
-        <>
-          <GateCard stats={stats} />
-          <div className="grid gap-5 lg:grid-cols-2">
-            <FunnelCard stats={stats} />
-            <VerdictsCard stats={stats} />
-          </div>
-          <DailyChart stats={stats} />
-          <ReferrersCard stats={stats} />
-        </>
-      ) : !error ? (
-        <div className="flex justify-center py-10">
-          <Spinner />
-        </div>
-      ) : null}
-
-      <PredictionsAdmin token={token} onAuthError={onAuthError} />
-      <WaitlistAdmin token={token} onAuthError={onAuthError} stats={stats} onChanged={() => void load()} />
+      <Tabs
+        label="Admin sections"
+        variant="underline"
+        value={tab}
+        onValueChange={setTab}
+        items={[
+          {
+            id: "metrics",
+            label: "Metrics",
+            content: stats ? (
+              <div className="flex flex-col gap-5">
+                <GateCard stats={stats} />
+                <div className="grid gap-5 lg:grid-cols-2">
+                  <FunnelCard stats={stats} />
+                  <VerdictsCard stats={stats} />
+                </div>
+                <DailyChart stats={stats} />
+                <ReferrersCard stats={stats} />
+              </div>
+            ) : !error ? (
+              <div className="flex justify-center py-10">
+                <Spinner />
+              </div>
+            ) : null,
+          },
+          { id: "predictions", label: "Predictions", content: <PredictionsAdmin token={token} onAuthError={onAuthError} /> },
+          {
+            id: "waitlist",
+            label: "Waitlist",
+            content: <WaitlistAdmin token={token} onAuthError={onAuthError} stats={stats} onChanged={() => void load()} />,
+          },
+          { id: "billing", label: "Billing", content: <BillingPanel adminToken={token} /> },
+        ]}
+      />
     </div>
   );
 }

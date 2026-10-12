@@ -44,3 +44,9 @@ See `.env.example`. Everything works with zero keys (pokemontcg.io allows low-ra
 - Any estimated number (graded prices, gem-rate priors) is visibly labelled "estimate".
 - Fee table carries a "last verified" date and lives in one config file.
 - Footer disclaimer on every page: "Estimates, not financial advice. Not affiliated with PSA, CGC, or The Pokémon Company."
+
+## Added after launch
+- **Ops:** `GET /api/health` reports storage backend, DB reachability, and which config variables exist (names only).
+- **Metrics:** `POST /api/events` (cookieless, allowlisted events, 90-day retention); `src/lib/analytics`.
+- **Admin:** `/admin` (token-gated tabs: Metrics, Predictions, Waitlist, Billing). APIs under `/api/admin/*` all require `x-admin-token`: `stats`, `predictions`, `waitlist` (CSV), `delete`, `billing/{settings,test,sync-products,summary}`.
+- **Billing:** see `docs/BILLING.md`. Plans in `src/lib/billing/plans.ts`. Public: `/api/billing/{config,checkout,claim,me,consume,portal,restore}`, `/api/stripe/webhook`. Pages: `/pricing`, `/pricing/success`, `/pricing/restore`. Payments stay off until enabled in /admin → Billing.

@@ -11,6 +11,26 @@ import { CardSearch } from "./CardSearch";
 import { fetchPrice, searchCards, shareImage, shareUrl, usd, pool } from "./format";
 import { Btn, CardThumb, EmptyState, Money, Panel, Segmented, Skeleton } from "./parts";
 import { VerdictBadge } from "./VerdictBadge";
+import { UpgradePanel, useEntitlement } from "@/components/billing";
+
+/** Binder triage is a paid feature past this many cards (soft: results still show). */
+export const FREE_BINDER_CARDS = 10;
+const CHARGED_KEY = "sos:binder-charged";
+
+function loadCharged(): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(CHARGED_KEY) ?? "[]") as string[]);
+  } catch {
+    return new Set();
+  }
+}
+function saveCharged(keys: Set<string>) {
+  try {
+    localStorage.setItem(CHARGED_KEY, JSON.stringify([...keys].slice(-2000)));
+  } catch {
+    /* storage unavailable */
+  }
+}
 
 const CONCURRENCY = 3;
 const MAX_ENTRIES = 300;
@@ -247,6 +267,43 @@ export function Binder() {
     track("binder_evaluated", { cards: evaluated });
   }, [evaluated, totals.pending]);
 
+  // Paid past FREE_BINDER_CARDS: Pro is unlimited; a pack spends one credit per extra card, once
+  // (charged card keys are remembered so a reload doesn't charge again); otherwise show the upgrade.
+  const ent = useEntitlement();
+  const [overLimit, setOverLimit] = useState(false);
+  const charging = useRef(false);
+  const { consume, isPro, hasToken, loading: entLoading } = ent;
+  useEffect(() => {
+    const extra = entries.slice(FREE_BINDER_CARDS);
+    if (!extra.length || isPro) {
+      setOverLimit(false);
+      return;
+    }
+    if (entLoading || charging.current) return;
+    const charged = loadCharged();
+    const uncharged = extra.filter((e) => !charged.has(e.key));
+    if (!uncharged.length) {
+      setOverLimit(false);
+      return;
+    }
+    if (!hasToken) {
+      setOverLimit(true);
+      return;
+    }
+    charging.current = true;
+    void consume(uncharged.length)
+      .then((r) => {
+        if (r.ok) {
+          uncharged.forEach((e) => charged.add(e.key));
+          saveCharged(charged);
+        }
+        setOverLimit(!r.ok);
+      })
+      .finally(() => {
+        charging.current = false;
+      });
+  }, [entries, isPro, hasToken, entLoading, consume]);
+
   return (
     <div className="flex flex-col gap-5">
       {/* Add */}
@@ -313,6 +370,7 @@ export function Binder() {
         />
       ) : (
         <>
+          {overLimit ? <UpgradePanel source="binder" context="binder" /> : null}
           {/* Totals */}
           <Panel className="p-4">
             <p className="font-mono text-lg font-bold tabular-nums sm:text-xl">
