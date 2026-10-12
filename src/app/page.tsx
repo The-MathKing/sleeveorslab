@@ -5,6 +5,8 @@ import { Accordion, Badge, Button, Container, Eyebrow, Money, Stat } from "@/com
 import { CardArt } from "@/components/brand/CardArt";
 import { CenteringExplainer } from "@/components/brand/CenteringExplainer";
 import { ExampleVerdictCard } from "@/components/brand/ExampleVerdictCard";
+import { JsonLd } from "@/components/brand/JsonLd";
+import { faqLd, RSS_ALTERNATE, softwareApplicationLd } from "@/lib/seo";
 import { LiveCenteringDemo } from "@/components/brand/LiveCenteringDemo";
 import { VerdictStamp } from "@/components/brand/VerdictStamp";
 import { WaitlistForm } from "@/components/brand/WaitlistForm";
@@ -12,7 +14,7 @@ import { EXAMPLE } from "@/components/brand/exampleData";
 
 export const metadata: Metadata = {
   title: { absolute: "Sleeve or Slab · The app that tells you when not to grade" },
-  alternates: { canonical: "/" },
+  alternates: { canonical: "/", types: RSS_ALTERNATE },
 };
 
 function SectionHeading({ eyebrow, title, children }: { eyebrow: string; title: React.ReactNode; children?: React.ReactNode }) {
@@ -122,6 +124,7 @@ const receiptsRows = [
 export default function LandingPage() {
   return (
     <>
+      <JsonLd data={[softwareApplicationLd(), faqLd()]} />
       {/* ---------- HERO ---------- */}
       <section className="relative overflow-hidden border-b border-line">
         <Container className="grid items-center gap-10 pb-16 pt-10 sm:pt-16 md:grid-cols-[1.15fr_0.85fr] md:gap-6 md:pb-24">

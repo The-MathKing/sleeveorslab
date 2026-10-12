@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Callout, PageShell, Prose } from "@/components/brand/Prose";
 
-export const metadata: Metadata = {
-  title: "Disclaimer",
-  description: "Estimates, not financial advice. Not affiliated with PSA, CGC, Nintendo, or The Pokémon Company.",
-  alternates: { canonical: "/disclaimer" },
-};
+export const metadata: Metadata = pageMetadata("/disclaimer", "Disclaimer", "Estimates, not financial advice. Not affiliated with PSA, CGC, Nintendo, or The Pokémon Company.");
 
 export default function DisclaimerPage() {
   return (

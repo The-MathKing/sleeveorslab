@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { PageShell, Prose } from "@/components/brand/Prose";
 
-export const metadata: Metadata = {
-  title: "Terms",
-  description: "The terms for using Sleeve or Slab, in plain English.",
-  alternates: { canonical: "/terms" },
-};
+export const metadata: Metadata = pageMetadata("/terms", "Terms", "The terms for using Sleeve or Slab, in plain English.");
 
 export default function TermsPage() {
   return (

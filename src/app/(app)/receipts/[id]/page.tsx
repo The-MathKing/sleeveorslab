@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { RSS_ALTERNATE } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -32,12 +33,18 @@ async function load(id: string): Promise<{ p: Prediction | null; error?: string 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const { p } = await load(id);
-  if (!p) return { title: `Receipt ${safeDecode(id)}` };
+  if (!p) return { title: `Receipt ${safeDecode(id)}`, description: "This receipt isn't in the public log.", robots: { index: false } };
   const title = `${p.id}: ${p.card.name} → ${p.verdict}`;
   const description = p.outcome
     ? `Predicted ${p.verdict} with ${p.grader}; graded ${p.grader} ${p.outcome.grade}.`
     : `Predicted ${p.verdict} with ${p.grader}, logged before the grade came back.`;
-  return { title, description, openGraph: { title, description }, twitter: { card: "summary", title, description } };
+  return {
+    title,
+    description,
+    alternates: { canonical: `/receipts/${p.id}`, types: RSS_ALTERNATE },
+    openGraph: { title, description, url: `/receipts/${p.id}` },
+    twitter: { card: "summary", title, description },
+  };
 }
 
 export default async function ReceiptPage({ params }: Params) {

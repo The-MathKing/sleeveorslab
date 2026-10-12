@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { PageShell } from "@/components/brand/Prose";
 import { PricingView } from "@/components/billing/PricingView";
 import { FREE_VERDICTS_PER_DAY, PLANS } from "@/lib/billing/plans";
@@ -6,11 +7,7 @@ import { FREE_VERDICTS_PER_DAY, PLANS } from "@/lib/billing/plans";
 const pro = PLANS["pro-monthly"];
 const pack = PLANS["pack-100"];
 
-export const metadata: Metadata = {
-  title: "Pricing",
-  description: `Free: card lookup, centering, and ${FREE_VERDICTS_PER_DAY} verdicts a day. Pro is ${pro.price}${pro.per.replace("/ ", "/")}, or ${pack.credits} scans for ${pack.price} once.`,
-  alternates: { canonical: "/pricing" },
-};
+export const metadata: Metadata = pageMetadata("/pricing", "Pricing", `Free: card lookup, centering, and ${FREE_VERDICTS_PER_DAY} verdicts a day. Pro is ${pro.price}${pro.per.replace("/ ", "/")}, or ${pack.credits} scans for ${pack.price} once.`);
 
 export default function PricingPage() {
   return (

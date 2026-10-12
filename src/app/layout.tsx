@@ -6,6 +6,8 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { ServiceWorkerRegister } from "@/components/brand/ServiceWorkerRegister";
 import { Analytics } from "@/lib/analytics/Analytics";
 import { SITE_URL } from "@/lib/site";
+import { organizationLd, RSS_ALTERNATE, websiteLd } from "@/lib/seo";
+import { JsonLd } from "@/components/brand/JsonLd";
 import "./globals.css";
 
 const display = Barlow_Condensed({
@@ -41,7 +43,18 @@ export const metadata: Metadata = {
   },
   description,
   applicationName: "Sleeve or Slab",
-  keywords: ["Pokémon card grading", "PSA", "CGC", "should I grade", "centering", "grading calculator", "gem rate"],
+  keywords: [
+    "Pokémon card grading",
+    "is my card worth grading",
+    "should I grade my Pokémon card",
+    "PSA grading cost",
+    "CGC grading cost",
+    "card centering checker",
+    "PSA 10 centering",
+    "grading calculator",
+    "gem rate",
+  ],
+  alternates: { canonical: "/", types: RSS_ALTERNATE },
   appleWebApp: { capable: true, title: "SleeveSlab", statusBarStyle: "default" },
   formatDetection: { telephone: false },
   openGraph: {
@@ -82,6 +95,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </ToastProvider>
         <ServiceWorkerRegister />
         <Analytics />
+        <JsonLd data={[organizationLd(), websiteLd()]} />
       </body>
     </html>
   );

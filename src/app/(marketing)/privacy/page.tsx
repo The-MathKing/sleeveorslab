@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Callout, PageShell, Prose } from "@/components/brand/Prose";
 
-export const metadata: Metadata = {
-  title: "Privacy",
-  description: "Photos are processed on your device. We store only what you choose to log publicly.",
-  alternates: { canonical: "/privacy" },
-};
+export const metadata: Metadata = pageMetadata("/privacy", "Privacy", "Photos are processed on your device. We store only what you choose to log publicly.");
 
 export default function PrivacyPage() {
   return (

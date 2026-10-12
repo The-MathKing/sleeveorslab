@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button, ProbabilityBar } from "@/components/ui";
@@ -6,12 +7,7 @@ import { Callout, PageShell, Prose } from "@/components/brand/Prose";
 import { VerdictStamp } from "@/components/brand/VerdictStamp";
 import { EXAMPLE } from "@/components/brand/exampleData";
 
-export const metadata: Metadata = {
-  title: "How it works",
-  description:
-    "The method behind every verdict: centering measurement, grade probabilities, fees, and expected value versus selling raw. Plus what we can't do.",
-  alternates: { canonical: "/how-it-works" },
-};
+export const metadata: Metadata = pageMetadata("/how-it-works", "How it works", "The method behind every verdict: centering measurement, grade probabilities, fees, and expected value versus selling raw. Plus what we can't do.");
 
 export default function HowItWorksPage() {
   return (

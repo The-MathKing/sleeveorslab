@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ReceiptsLog } from "@/components/scan/ReceiptsLog";
 import { PageHeader } from "@/components/scan/parts";
 
-export const metadata: Metadata = {
-  title: "Receipts: every prediction, before the grade",
-  description: "A public, timestamped log of Sleeve or Slab predictions, checked against real grades. Misses included.",
-};
+export const metadata: Metadata = pageMetadata("/receipts", "Receipts: every prediction, before the grade", "A public, timestamped log of Sleeve or Slab predictions, checked against real grades. Misses included.");
 
 export default function ReceiptsPage() {
   return (

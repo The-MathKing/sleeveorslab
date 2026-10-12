@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ArrowRight } from "lucide-react";
 import * as grading from "@/lib/grading";
 import type { GraderId, GradingTier } from "@/lib/types";
 import { Badge, Button, EmptyState, Money } from "@/components/ui";
 import { PageShell, Prose } from "@/components/brand/Prose";
 
-export const metadata: Metadata = {
-  title: "Grading fees",
-  description: "PSA and CGC grading tiers, fees, declared-value caps and turnaround, with the date we last checked them.",
-  alternates: { canonical: "/fees" },
-};
+export const metadata: Metadata = pageMetadata("/fees", "Grading fees", "PSA and CGC grading tiers, fees, declared-value caps and turnaround, with the date we last checked them.");
 
 // The engines module may still be `declare` stubs during development; read it defensively.
 function loadTiers(): { tiers: GradingTier[]; verified: string | null } {

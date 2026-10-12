@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Collection } from "@/components/scan/Collection";
 import { PageHeader } from "@/components/scan/parts";
 
-export const metadata: Metadata = {
-  title: "Saved cards",
-  description: "Cards you've scanned and saved. Stored on this device only.",
-};
+export const metadata: Metadata = pageMetadata("/collection", "Saved cards", "Cards you've scanned and saved. Stored on this device only.");
 
 export default function CollectionPage() {
   return (

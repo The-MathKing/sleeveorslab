@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Suspense } from "react";
 import { ScanFlow } from "@/components/scan/ScanFlow";
 import { Skeleton } from "@/components/scan/parts";
 
-export const metadata: Metadata = {
-  title: "Scan a card",
-  description: "Measure centering from a photo, check condition, and get an honest grade-or-don't verdict with the math shown.",
-};
+export const metadata: Metadata = pageMetadata("/scan", "Scan a card", "Measure centering from a photo, check condition, and get an honest grade-or-don't verdict with the math shown.");
 
 export default function ScanPage() {
   return (
