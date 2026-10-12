@@ -28,7 +28,8 @@ Architecture and module ownership: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md
 
 ## Before launch
 
-- **Storage:** waitlist and predictions use a JSON file in `.data/`, which does not persist on serverless hosts (Vercel). Implement the Postgres adapter in `src/lib/db/postgres.ts` and set `DATABASE_URL`.
+- **Storage:** set `DATABASE_URL` to a Postgres database (Vercel → Storage → Neon). Tables are created automatically on first request. Without it, data goes to `.data/*.json`, which doesn't persist on Vercel.
+- **Deletion requests:** `POST /api/admin/delete` with header `x-admin-token` and body `{"email": "..."}` or `{"predictionId": "R-0042"}`.
 - **Fees:** values marked "Verify on grader site" in `fees.ts` need checking against PSA/CGC.
 - **Recording outcomes:** visitors email their cert; an admin records it at `/receipts/<id>?admin=1` with `ADMIN_TOKEN`.
 

@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Prediction } from "@/lib/types";
 import { createFileAdapter, normalizePredictionId, type StorageAdapter } from "./index";
-import { createPostgresAdapter } from "./postgres";
 
 const base: Omit<Prediction, "id" | "createdAt"> = {
   card: { id: "sv3pt5-199", name: "Charizard ex", setId: "sv3pt5", setName: "151", number: "199" },
@@ -75,8 +74,5 @@ describe("misc", () => {
     expect(normalizePredictionId("r-42")).toBe("R-0042");
     expect(normalizePredictionId("R-12345")).toBe("R-12345");
     expect(normalizePredictionId("../x")).toBeNull();
-  });
-  it("postgres stub throws a helpful error", async () => {
-    await expect(createPostgresAdapter("postgres://x").waitlistCount()).rejects.toThrow(/DATABASE_URL/);
   });
 });

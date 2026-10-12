@@ -1,5 +1,5 @@
-// Server-side storage. File-backed JSON in ./.data (or $DATA_DIR) by default;
-// Postgres (stub, see ./postgres.ts) when DATABASE_URL is set.
+// Server-side storage. Postgres when DATABASE_URL is set (required on serverless hosts
+// like Vercel, whose filesystem is read-only); file-backed JSON in ./.data (or $DATA_DIR) otherwise.
 import path from "node:path";
 import type { Prediction, WaitlistSignup } from "@/lib/types";
 import type { StorageAdapter } from "./adapter";
@@ -8,13 +8,15 @@ import { createPostgresAdapter } from "./postgres";
 
 export type { StorageAdapter } from "./adapter";
 export { createFileAdapter } from "./file";
+export { createSqlAdapter, type SqlClient } from "./postgres";
 export { normalizeEmail, normalizePredictionId } from "./normalize";
 
 let adapter: StorageAdapter | null = null;
 
 export function getStorage(): StorageAdapter {
   if (adapter) return adapter;
-  const url = process.env.DATABASE_URL;
+  // Vercel's Neon integration sets DATABASE_URL; older Vercel Postgres projects set POSTGRES_URL.
+  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   adapter = url
     ? createPostgresAdapter(url)
     : createFileAdapter(process.env.DATA_DIR || path.join(process.cwd(), ".data"));
@@ -46,4 +48,10 @@ export function recordOutcome(
   outcome: NonNullable<Prediction["outcome"]>,
 ): Promise<Prediction | null> {
   return getStorage().recordOutcome(id, outcome);
+}
+export function deleteWaitlist(email: string): Promise<boolean> {
+  return getStorage().deleteWaitlist(email);
+}
+export function deletePrediction(id: string): Promise<boolean> {
+  return getStorage().deletePrediction(id);
 }

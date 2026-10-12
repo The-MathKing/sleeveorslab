@@ -145,5 +145,31 @@ export function createFileAdapter(dir: string, now: () => Date = () => new Date(
         return pred;
       });
     },
+
+    deleteWaitlist(email) {
+      return withLock(waitlistFile, async () => {
+        const db = await readJson(waitlistFile, emptyWaitlist);
+        const target = normalizeEmail(email);
+        const before = db.signups.length;
+        db.signups = db.signups.filter((x) => x.email !== target);
+        if (db.signups.length === before) return false;
+        await writeJsonAtomic(waitlistFile, db);
+        return true;
+      });
+    },
+
+    deletePrediction(id) {
+      return withLock(predictionsFile, async () => {
+        const norm = normalizePredictionId(id);
+        if (!norm) return false;
+        const db = await readPredictions();
+        const before = db.predictions.length;
+        // seq is kept, so a deleted id is never reused for a different prediction.
+        db.predictions = db.predictions.filter((p) => p.id !== norm);
+        if (db.predictions.length === before) return false;
+        await writeJsonAtomic(predictionsFile, db);
+        return true;
+      });
+    },
   };
 }
