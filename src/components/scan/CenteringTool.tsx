@@ -18,6 +18,7 @@ import { centeringCaps } from "@/lib/grading";
 import type { CenteringCap, CenteringMeasurement, CenteringResult, Point, Quad } from "@/lib/types";
 import { blobToCanvas, canvasImageData, thumbnail } from "./image";
 import { makeSampleCard } from "./sampleCard";
+import { CameraCapture, cameraSupported } from "./CameraCapture";
 import { Btn, Spinner } from "./parts";
 
 export interface CenteringToolProps {
@@ -203,6 +204,7 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
   const [dropHover, setDropHover] = useState(false);
   const [displayW, setDisplayW] = useState(0);
   const [loupeAt, setLoupeAt] = useState<"left" | "right">("right");
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const loupeRef = useRef<HTMLCanvasElement>(null);
@@ -300,6 +302,25 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
     },
     [ingestCanvas],
   );
+
+  // Live viewfinder when the browser supports it; otherwise the native camera picker.
+  const openCamera = useCallback(() => {
+    if (cameraSupported()) setCameraOpen(true);
+    else cameraRef.current?.click();
+  }, []);
+  const onCameraCapture = useCallback(
+    (canvas: HTMLCanvasElement) => {
+      setCameraOpen(false);
+      void ingestCanvas(canvas);
+    },
+    [ingestCanvas],
+  );
+  const onCameraClose = useCallback(() => setCameraOpen(false), []);
+  const onCameraUnavailable = useCallback((reason: string) => {
+    setCameraOpen(false);
+    setError(reason);
+    cameraRef.current?.click();
+  }, []);
 
   const loadSample = useCallback(() => {
     try {
@@ -493,6 +514,13 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
 
   const inputs = (
     <>
+      <CameraCapture
+        open={cameraOpen}
+        sideLabel={sideLabel}
+        onCapture={onCameraCapture}
+        onClose={onCameraClose}
+        onUnavailable={onCameraUnavailable}
+      />
       <input
         ref={cameraRef}
         type="file"
@@ -562,7 +590,7 @@ export function CenteringTool({ side = "front", compact = false, onResult, onIma
                 ) : null}
               </div>
               <div className="flex w-full max-w-sm flex-col gap-2 sm:flex-row sm:justify-center">
-                <Btn variant="primary" size="lg" onClick={() => cameraRef.current?.click()} className="sm:flex-1">
+                <Btn variant="primary" size="lg" onClick={openCamera} className="sm:flex-1">
                   <Camera className="size-5" aria-hidden /> Take photo
                 </Btn>
                 <Btn size="lg" onClick={() => fileRef.current?.click()} className="sm:flex-1">

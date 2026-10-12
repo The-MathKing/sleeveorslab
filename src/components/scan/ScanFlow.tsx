@@ -9,6 +9,7 @@ import { CardSearch } from "./CardSearch";
 import { CenteringTool } from "./CenteringTool";
 import { ConditionCheck, conditionRating, ratingLabel, type ConditionAnswers } from "./ConditionCheck";
 import { readCardNumber } from "./ocr";
+import { PhoneHandoff } from "./PhoneHandoff";
 import { Btn, CardThumb, Skeleton } from "./parts";
 import { VerdictView } from "./VerdictView";
 
@@ -131,6 +132,7 @@ export function ScanFlow() {
             skipLabel={front ? undefined : "Skip photo"}
             onSkip={() => go(2)}
           />
+          {!front ? <PhoneHandoff /> : null}
           {!front ? (
             <p className="mt-2 text-xs text-ink-3">Skipping the photo means we assume typical centering, and confidence drops.</p>
           ) : null}
